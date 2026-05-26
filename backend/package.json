@@ -5,8 +5,7 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "nodemon src/server.js",
-    "test": "jest --runInBand --detectOpenHandles"
+    "dev": "nodemon src/server.js"
   },
   "keywords": [],
   "author": "",
@@ -20,11 +19,6 @@
     "mongoose": "^9.6.2"
   },
   "devDependencies": {
-    "jest": "^29.7.0",
-    "nodemon": "^3.1.14",
-    "supertest": "^7.2.2"
-  },
-  "jest": {
-    "testEnvironment": "node"
+    "nodemon": "^3.1.14"
   }
 }
