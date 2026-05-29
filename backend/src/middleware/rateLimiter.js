@@ -1,19 +1,22 @@
-const rateLimit = require('express-rate-limit')
+const rateLimit = require("express-rate-limit");
+
+
 const standardLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15-minute window
-  max: 100, // Limit each IP to 100 requests per window
+  windowMs: 15 * 60 * 1000, // 15-minute window tracking
+  max: 100, 
   message: {
     success: false,
     message:
       "Too many requests from this IP. Please try again after 15 minutes.",
   },
-  standardHeaders: "draft-8",
+  standardHeaders: "draft-8", 
   legacyHeaders: false,
 });
 
+// Strict threshold for heavy computational image transformations
 const heavyProcessingLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute window
-  max: 5, // Allow only 5 heavy image conversions per minute per user
+  windowMs: 1 * 60 * 1000, 
+  max: 5,
   message: {
     success: false,
     message:
@@ -22,4 +25,5 @@ const heavyProcessingLimiter = rateLimit({
   standardHeaders: "draft-8",
   legacyHeaders: false,
 });
+
 module.exports = { standardLimiter, heavyProcessingLimiter };
