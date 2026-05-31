@@ -26,12 +26,32 @@ def upload_to_cloudinary(image_bytes, public_id):
 def apply_contrast_stretching(img):
     img_min = np.min(img)
     img_max = np.max(img)
-    
     if img_max == img_min:
         return img
-        
     stretched = (img - img_min) * (255.0 / (img_max - img_min))
     return np.clip(stretched, 0, 255).astype(np.uint8)
+
+def apply_histogram_equalization(img):
+    # Convert image to YCrCb color space to isolate structural luminance channel from color components
+    ycrcb = cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
+    # Apply global equalization strictly onto the Y (Luminance) channel array matrix
+    ycrcb[:, :, 0] = cv2.equalizeHist(ycrcb[:, :, 0])
+    # Convert back to standard standard BGR display arrays
+    return cv2.cvtColor(ycrcb, cv2.COLOR_YCrCb2BGR)
+
+def apply_clahe(img, clip_limit=2.0, tile_grid_size=(8, 8)):
+    ycrcb = cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
+    # Configure high-performance adaptive execution container structures
+    clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=tile_grid_size)
+    ycrcb[:, :, 0] = clahe.apply(ycrcb[:, :, 0])
+    return cv2.cvtColor(ycrcb, cv2.COLOR_YCrCb2BGR)
+
+def apply_gamma_correction(img, gamma=0.5):
+    # Construct a look-up table (LUT) array mapping input intensity values [0-255] to power-law variations
+    inv_gamma = 1.0 / gamma
+    table = np.array([((i / 255.0) ** inv_gamma) * 255 for i in np.arange(0, 256)]).astype("uint8")
+    # Apply the mapping instantly across all pixels via hardware accelerated LUT indexing
+    return cv2.LUT(img, table)
 
 def main():
     try:
@@ -51,8 +71,15 @@ def main():
         
         e1 = cv2.getTickCount()
         
+        # Mapping algorithmic operations matching the ImageProject dynamic tech enumerations
         if algorithm == 'CONTRAST_STRETCHING':
             processed_img = apply_contrast_stretching(img)
+        elif algorithm == 'HISTOGRAM_EQUALIZATION':
+            processed_img = apply_histogram_equalization(img)
+        elif algorithm == 'CLAHE':
+            processed_img = apply_clahe(img)
+        elif algorithm == 'GAMMA_CORRECTION':
+            processed_img = apply_gamma_correction(img, gamma=0.4) # Optimized for underexposed inputs
         else:
             processed_img = img
             
