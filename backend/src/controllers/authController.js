@@ -16,9 +16,7 @@ const requestOtp = async (req, res) => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     await redis.set(`otp:${email}`, otp, { ex: 300 });
-    console.log(
-      `[OTP Cached to Redis]: ${otp} for ${email} (expires in 5 minutes)`,
-    );
+
 
     await resend.emails.send({
       from: "Pixel Lab System <onboarding@resend.dev>",
