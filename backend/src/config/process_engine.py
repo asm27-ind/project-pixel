@@ -23,8 +23,6 @@ def upload_to_cloudinary(image_bytes, public_id):
     response = requests.post(url, files=files, data=data, auth=(api_key, api_secret))
     return response.json().get('secure_url')
 
-# --- ENHANCEMENT SUITE ---
-
 def apply_contrast_stretching(img):
     img_min = np.min(img)
     img_max = np.max(img)
@@ -48,8 +46,6 @@ def apply_gamma_correction(img, gamma=0.4):
     inv_gamma = 1.0 / gamma
     table = np.array([((i / 255.0) ** inv_gamma) * 255 for i in np.arange(0, 256)]).astype("uint8")
     return cv2.LUT(img, table)
-
-# --- RESTORATION SUITE ---
 
 def apply_mean_filter(img, kernel_size=5):
     return cv2.blur(img, (kernel_size, kernel_size))
@@ -87,8 +83,6 @@ def apply_frequency_restoration(img, mode='WIENER', K=0.005):
     processed_gray = np.clip(img_back, 0, 255).astype(np.uint8)
     return cv2.cvtColor(processed_gray, cv2.COLOR_GRAY2BGR)
 
-# --- ENCODING & COMPRESSION SUITE ---
-
 def execute_entropy_compression(img):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     total_pixels = gray.size
@@ -124,8 +118,6 @@ def execute_lzw_compression(img):
     bit_width = int(np.ceil(np.log2(dict_size)))
     compressed_size = int(np.ceil((len(compressed_codes) * bit_width) / 8.0))
     return img, compressed_size
-
-# --- MAIN CONTROLLER EXECUTIVE ROUTINE ---
 
 def main():
     try:
