@@ -14,7 +14,8 @@ app.set("trust proxy", 1);
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (origin === process.env.FRONTEND_URL) {
+      // Allows internal server checks, browser direct visits, and health checks
+      if (!origin || origin === process.env.FRONTEND_URL) {
         return callback(null, true);
       }
       return callback(new Error("CORS Access Denied"), false);
