@@ -29,7 +29,6 @@ app.get("/health", (req, res) => {
   res.status(200).json({ status: "healthy", project: "Pixel DIP Engine" });
 });
 
-
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () =>
   console.log(`[Server Engaged]: Running on port ${PORT}`),

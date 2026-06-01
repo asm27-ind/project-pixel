@@ -23,3 +23,19 @@ src/
 │   └── imageRoutes.js    # Operational: Protected File Ingestion Mappings
 └── server.js             # Operational: Central App Entry Gateway & Core Middlewares
 ```
+
+# Frontend Architecture
+
+```text
+frontend/src/
+├── assets/           # Global images, logos, and custom CSS styles
+├── components/       # Reusable UI parts (Buttons, Navbar, Image comparison sliders)
+├── context/          # Global state management (User auth data, active image states)
+├── hooks/            # Custom reusable logic (e.g., useAuth, useDipEngine)
+├── pages/            # Main complete views
+│   ├── Login.jsx     # The frictionless OTP entry page
+│   └── Dashboard.jsx # The 12-algorithm interactive image laboratory
+├── services/         # API connection modules (Axios network calls to backend)
+├── App.jsx           # Main router config mapping endpoints to pages
+└── main.jsx          # App root configuration entry gate
+```

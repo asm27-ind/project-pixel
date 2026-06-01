@@ -64,10 +64,10 @@ export default function Login() {
                 {step === 1 ? (
                     <form onSubmit={handleRequestOtp}>
                         <div className="form-group" style={{ marginBottom: '20px' }}>
-                            <label className="form-label">Institutional Email Address</label>
+                            <label className="form-label"> Email Address</label>
                             <input
                                 type="email"
-                                placeholder="name@institution.com"
+                                placeholder="name@gmail.com"
                                 className="form-input"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
