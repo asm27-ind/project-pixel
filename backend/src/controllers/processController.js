@@ -65,6 +65,10 @@ const executeDipAlgorithm = async (req, res) => {
       project.techniqueApplied = algorithm;
       project.metadata.processingTimeMs = result.processingTimeMs;
 
+      if (result.compressedSizeInBytes !== null) {
+        project.metadata.compressedSizeInBytes = result.compressedSizeInBytes;
+      }
+
       if (
         [
           "CONTRAST_STRETCHING",
