@@ -16,11 +16,6 @@ const requestOtp = async (req, res) => {
     // Store inside Upstash serverless Redis cluster with a strict 5-minute time-to-live cache boundary
     await redis.set(`otp:${email}`, otp, { ex: 300 });
 
-    // Console bypass log to prevent requiring premium live email delivery limits for dev testing
-    console.log(
-      `[Verification Channel Spawm] SECURE OTP FOR ${email} ➔ [ ${otp} ]`,
-    );
-
     return res
       .status(200)
       .json({
