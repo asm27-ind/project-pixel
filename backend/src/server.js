@@ -14,8 +14,17 @@ app.set("trust proxy", 1);
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allows internal server checks, browser direct visits, and health checks
-      if (!origin || origin === process.env.FRONTEND_URL) {
+      const allowed = [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        process.env.FRONTEND_URL,
+      ];
+      // Allow if no origin (browser direct visit) or if it matches our list
+      if (
+        !origin ||
+        allowed.includes(origin) ||
+        allowed.includes(origin + "/")
+      ) {
         return callback(null, true);
       }
       return callback(new Error("CORS Access Denied"), false);
