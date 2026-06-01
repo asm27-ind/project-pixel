@@ -28,27 +28,28 @@ export function useDipEngine() {
       setUploading(false);
     }
   };
-
-  const executeTransformation = async (algoName) => {
-    if (!project) return;
-    setProcessing(true);
-    setActiveAlgo(algoName);
-    setErrorMsg("");
-    setStatusMsg(`Spawning Python worker thread for ${algoName}...`);
-    try {
-      const data = await applyTransform(project._id, algoName);
-      if (data.success) {
-        setProject(data.project);
-        setStatusMsg("NumPy transformation loop complete.");
-      }
-    } catch (err) {
-      setErrorMsg(
-        err.response?.data?.message || "Python compute thread runtime crash.",
-      );
-    } finally {
-      setProcessing(false);
+const executeTransformation = async (algoName) => {
+  if (!project) return;
+  setProcessing(true);
+  setActiveAlgo(algoName);
+  setErrorMsg("");
+  setStatusMsg(`Executing computational transformations for ${algoName}...`);
+  try {
+    const data = await applyTransform(project._id, algoName);
+    if (data.success) {
+      setProject(data.project);
+      setStatusMsg("Processing complete. Workspace synchronized.");
     }
-  };
+  } catch (err) {
+    // CHANGE THIS LINE: Stop hardcoding the python crash string
+    setErrorMsg(
+      err.response?.data?.message ||
+        "Processing engine execution thread failure.",
+    );
+  } finally {
+    setProcessing(false);
+  }
+};
 
   const clearWorkspace = () => {
     setProject(null);

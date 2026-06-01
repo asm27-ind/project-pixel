@@ -65,9 +65,13 @@ export default function Dashboard() {
                                 {project.processedUrl ? (
                                     <img src={project.processedUrl} alt="Processed" className="display-img" />
                                 ) : (
-                                    <div className="empty-processed-placeholder">
-                                        {processing ? 'NumPy execution threads calculating matrix values...' : 'Select a mathematical technique on the left panel to execute computing layers.'}
-                                    </div>
+                                            <div className="empty-processed-placeholder">
+                                                {processing ? (
+                                                    'Engine manipulating pixel vectors directly inside server heap RAM...'
+                                                ) : (
+                                                    'Select an image enhancement or compression technique on the left panel to execute.'
+                                                )}
+                                            </div>
                                 )}
                             </div>
                         </div>
