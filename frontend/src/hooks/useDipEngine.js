@@ -9,6 +9,26 @@ export function useDipEngine() {
   const [statusMsg, setStatusMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
+  const downloadImage = async (url, fallbackName = "processed-image.png") => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+
+      const blobUrl = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = fallbackName;
+      document.body.appendChild(link);
+      link.click();
+
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      setErrorMsg("Could not route file download stream from cloud CDN nodes.");
+    }
+  };
+
   const processUpload = async (file) => {
     setUploading(true);
     setErrorMsg("");
@@ -28,28 +48,27 @@ export function useDipEngine() {
       setUploading(false);
     }
   };
-const executeTransformation = async (algoName) => {
-  if (!project) return;
-  setProcessing(true);
-  setActiveAlgo(algoName);
-  setErrorMsg("");
-  setStatusMsg(`Executing computational transformations for ${algoName}...`);
-  try {
-    const data = await applyTransform(project._id, algoName);
-    if (data.success) {
-      setProject(data.project);
-      setStatusMsg("Processing complete. Workspace synchronized.");
+  const executeTransformation = async (algoName) => {
+    if (!project) return;
+    setProcessing(true);
+    setActiveAlgo(algoName);
+    setErrorMsg("");
+    setStatusMsg(`Executing computational transformations for ${algoName}...`);
+    try {
+      const data = await applyTransform(project._id, algoName);
+      if (data.success) {
+        setProject(data.project);
+        setStatusMsg("Processing complete. Workspace synchronized.");
+      }
+    } catch (err) {
+      setErrorMsg(
+        err.response?.data?.message ||
+          "Processing engine execution thread failure.",
+      );
+    } finally {
+      setProcessing(false);
     }
-  } catch (err) {
-    // CHANGE THIS LINE: Stop hardcoding the python crash string
-    setErrorMsg(
-      err.response?.data?.message ||
-        "Processing engine execution thread failure.",
-    );
-  } finally {
-    setProcessing(false);
-  }
-};
+  };
 
   const clearWorkspace = () => {
     setProject(null);
@@ -68,5 +87,6 @@ const executeTransformation = async (algoName) => {
     processUpload,
     executeTransformation,
     clearWorkspace,
+    downloadImage,
   };
 }

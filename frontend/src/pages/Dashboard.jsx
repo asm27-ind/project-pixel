@@ -15,6 +15,7 @@ export default function Dashboard() {
         processUpload,
         executeTransformation,
         clearWorkspace,
+        downloadImage,
     } = useDipEngine();
 
     const handleFileChange = (e) => {
@@ -56,22 +57,42 @@ export default function Dashboard() {
 
                         <div className="comparison-grid">
                             <div className="image-frame">
-                                <span className="frame-label">Raw Input Matrix Layer</span>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                    <span className="frame-label">Raw Input Matrix Layer</span>
+                                    <button
+                                        onClick={() => downloadImage(project.originalUrl, `original-${project.originalName}`)}
+                                        className="btn-secondary"
+                                        style={{ padding: '4px 8px', fontSize: '11px', backgroundColor: 'var(--brand-cyan, #0ea5e9)' }}
+                                    >
+                                        💾 Download Raw
+                                    </button>
+                                </div>
                                 <img src={project.originalUrl} alt="Original" className="display-img" />
                             </div>
 
                             <div className="image-frame">
-                                <span className="frame-label">Python Computed Output Array</span>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                    <span className="frame-label">Python Computed Output Array</span>
+                                    {project.processedUrl && (
+                                        <button
+                                            onClick={() => downloadImage(project.processedUrl, `${project.techniqueApplied.toLowerCase()}-${project.originalName}`)}
+                                            className="btn-secondary"
+                                            style={{ padding: '4px 8px', fontSize: '11px', backgroundColor: 'var(--brand-success, #10b981)' }}
+                                        >
+                                            📥 Download Output
+                                        </button>
+                                    )}
+                                </div>
                                 {project.processedUrl ? (
                                     <img src={project.processedUrl} alt="Processed" className="display-img" />
                                 ) : (
-                                            <div className="empty-processed-placeholder">
-                                                {processing ? (
-                                                    'Engine manipulating pixel vectors directly inside server heap RAM...'
-                                                ) : (
-                                                    'Select an image enhancement or compression technique on the left panel to execute.'
-                                                )}
-                                            </div>
+                                    <div className="empty-processed-placeholder">
+                                        {processing ? (
+                                            'Engine manipulating pixel vectors directly inside server heap RAM...'
+                                        ) : (
+                                            'Select an image enhancement or compression technique on the left panel to execute.'
+                                        )}
+                                    </div>
                                 )}
                             </div>
                         </div>

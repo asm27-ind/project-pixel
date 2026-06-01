@@ -25,7 +25,6 @@ body {
   overflow: hidden;
 }
 
-/* Auth Layout (Login) */
 .lab-container {
   display: flex;
   justify-content: center;
@@ -59,7 +58,6 @@ body {
   margin-bottom: 24px;
 }
 
-/* Core Dashboard Columns Grid Layout */
 .dashboard-root {
   display: grid;
   grid-template-columns: 300px 1fr 320px;
@@ -67,7 +65,6 @@ body {
   width: 100vw;
 }
 
-/* Side Control Tower (Panel 1) */
 .control-sidebar {
   background-color: var(--bg-panel);
   border-right: 1px solid var(--border-subtle);
@@ -129,7 +126,6 @@ body {
   font-weight: 600;
 }
 
-/* Center Core Processing Canvas Viewport (Panel 2) */
 .canvas-viewport {
   background-color: var(--bg-main);
   padding: 24px;
@@ -204,7 +200,6 @@ body {
   padding: 20px;
 }
 
-/* Right Analytics Summary Column (Panel 3) */
 .analytics-sidebar {
   background-color: var(--bg-panel);
   border-left: 1px solid var(--border-subtle);
@@ -249,7 +244,6 @@ body {
   color: var(--brand-cyan);
 }
 
-/* Forms & Structural Shared Buttons */
 .form-group { display: flex; flex-direction: column; gap: 6px; }
 .form-label { font-size: 11px; font-weight: 600; color: #cbd5e1; text-transform: uppercase; }
 .form-input { padding: 12px 16px; background-color: var(--bg-input); border: 1px solid #475569; border-radius: 6px; color: #fff; outline: none; font-size: 15px; }
