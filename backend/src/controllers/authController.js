@@ -5,16 +5,15 @@ const nodemailer = require("nodemailer");
 
 // Initialize Nodemailer SMTP Engine with Gmail
 const transporter = nodemailer.createTransport({
-  host: "74.125.142.108",
+  host: "smtp.gmail.com", 
   port: 587,
-  secure: false, // Must be false for port 587
+  secure: false,
   auth: {
     user: process.env.GMAIL_USER,
     pass: process.env.GMAIL_APP_PASSWORD,
   },
   tls: {
     rejectUnauthorized: false,
-    servername: "smtp.gmail.com",
   },
   connectionTimeout: 10000,
 });
