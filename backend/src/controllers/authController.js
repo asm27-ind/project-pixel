@@ -2,6 +2,9 @@ const redis = require("../config/redis");
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
+const dns = require("dns");
+
+dns.lookup("smtp.gmail.com", { all: true }, console.log);
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
