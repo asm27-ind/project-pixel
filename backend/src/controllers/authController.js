@@ -4,23 +4,20 @@ const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
-  // 1. Force a direct, verified IPv4 address for Google SMTP to bypass Render's IPv6 lookup bug
-  host: "74.125.142.108",
+  host: "smtp.gmail.com",
   port: 587,
-  secure: false, // Must be false for port 587
+  secure: false, // STARTTLS
+
   auth: {
     user: process.env.GMAIL_USER,
     pass: process.env.GMAIL_APP_PASSWORD,
   },
-  // 2. Explicitly force Node's network layer to use IPv4
-  dnsResolution: "ipv4first",
 
   tls: {
-    // 3. Keep SSL handshakes secure by explicitly naming the destination server
-    rejectUnauthorized: false,
     servername: "smtp.gmail.com",
   },
-  connectionTimeout: 15000, // Give the cloud network 15 seconds to negotiate
+
+  connectionTimeout: 15000,
 });
 
 const requestOtp = async (req, res) => {
