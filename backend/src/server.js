@@ -12,23 +12,10 @@ const app = express();
 
 app.set("trust proxy", 1);
 
+
 app.use(
   cors({
-    origin: function (origin, callback) {
-      const allowed = [
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        process.env.FRONTEND_URL,
-      ];
-      if (
-        !origin ||
-        allowed.includes(origin) ||
-        allowed.includes(origin + "/")
-      ) {
-        return callback(null, true);
-      }
-      return callback(new Error("CORS Access Denied"), false);
-    },
+    origin: true,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
