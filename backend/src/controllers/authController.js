@@ -1,8 +1,16 @@
 const redis = require("../config/redis");
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
-const { Resend } = require("resend");
-const resend = new Resend(process.env.RESEND_API_KEY);
+const nodemailer = require("nodemailer");
+
+// Initialize Nodemailer SMTP Engine with Gmail
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_APP_PASSWORD,
+  },
+});
 
 const requestOtp = async (req, res) => {
   try {
@@ -13,14 +21,17 @@ const requestOtp = async (req, res) => {
         .json({ success: false, message: "Email missing." });
     }
 
+    // Sanitize input to lowercase to prevent case-sensitive mismatch routing issues
+    const sanitizedEmail = email.trim().toLowerCase();
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    await redis.set(`otp:${email}`, otp, { ex: 300 });
+    // FIXED: Universal Upstash Redis command pairing to support all driver setups cleanly
+    await redis.set(`otp:${sanitizedEmail}`, otp);
+    await redis.expire(`otp:${sanitizedEmail}`, 300); // 5-minute lifecycle expiry window
 
-
-    await resend.emails.send({
-      from: "Pixel Lab System <onboarding@resend.dev>",
-      to: email,
+    await transporter.sendMail({
+      from: `"Pixel Lab System" <${process.env.GMAIL_USER}>`,
+      to: sanitizedEmail,
       subject: "🔒 Your Pixel Lab Access Clearance Token",
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 30px; background-color: #0b1329; color: #ffffff; border-radius: 12px; max-width: 450px; margin: 0 auto; border: 1px solid #1e293b;">
@@ -42,7 +53,7 @@ const requestOtp = async (req, res) => {
     return res.status(500).json({
       success: false,
       message:
-        "Resend gateway routing or Redis cluster network connection failure.",
+        "Nodemailer SMTP handshake or Redis cluster network connection failure.",
       error: error.message,
     });
   }
@@ -51,21 +62,32 @@ const requestOtp = async (req, res) => {
 const verifyOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
+    if (!email || !otp) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Required parameters missing." });
+    }
 
-    const cachedOtp = await redis.get(`otp:${email}`);
+    const sanitizedEmail = email.trim().toLowerCase();
+    const cachedOtpRaw = await redis.get(`otp:${sanitizedEmail}`);
 
-    if (!cachedOtp || cachedOtp !== otp) {
+    // FIXED: Enforce clear, explicit string transformations to bypass any database driver type-casting anomalies
+    const cachedOtp = cachedOtpRaw ? cachedOtpRaw.toString().trim() : null;
+    const cleanInputOtp = otp.toString().trim();
+
+    if (!cachedOtp || cachedOtp !== cleanInputOtp) {
       return res.status(400).json({
         success: false,
         message: "Invalid or expired security clearance token.",
       });
     }
 
-    await redis.del(`otp:${email}`);
+    await redis.del(`otp:${sanitizedEmail}`);
 
-    let user = await User.findOne({ email });
+    let user = await User.findOne({ email: sanitizedEmail });
     if (!user) {
-      user = await User.create({ email });
+      const displayName = sanitizedEmail.split("@")[0];
+      user = await User.create({ email: sanitizedEmail, displayName });
     }
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {

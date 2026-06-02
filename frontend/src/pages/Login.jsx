@@ -22,7 +22,7 @@ export default function Login() {
 
         try {
             const response = await API.post('/auth/request-otp', { email });
-            // ✅ FIX: Postman gets an object back directly. If status is 200/201, proceed!
+            
             if (response.status === 200 || response.status === 201 || response.data) {
                 setMessage('Verification code successfully dispatched to your inbox.');
                 setStep(2);
@@ -43,7 +43,7 @@ export default function Login() {
 
         try {
             const response = await API.post('/auth/verify-otp', { email, otp });
-            // ✅ FIX: Check for standard HTTP 200 success or response payload token presence
+            
             if (response.status === 200 || response.data?.token) {
                 loginSession(response.data.token, response.data.user || { email });
             }
