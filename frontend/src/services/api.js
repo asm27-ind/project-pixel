@@ -1,14 +1,11 @@
-import axios from 'axios';
+import axios from "axios";
 
 const API = axios.create({
-  baseURL: 'https://pixel-backend-api.onrender.com/api/v1', 
-  withCredentials: true,
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json'
-  }
+    "Content-Type": "application/json",
+  },
 });
-
-export default API;
 
 API.interceptors.request.use(
   (config) => {
