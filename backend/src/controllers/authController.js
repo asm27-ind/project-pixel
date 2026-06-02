@@ -3,8 +3,6 @@ const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 
-const nodemailer = require("nodemailer");
-
 const transporter = nodemailer.createTransport({
   // 1. Force a direct, verified IPv4 address for Google SMTP to bypass Render's IPv6 lookup bug
   host: "74.125.142.108",
