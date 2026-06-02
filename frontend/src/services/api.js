@@ -2,11 +2,12 @@ import axios from "axios";
 
 
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL, 
-  withCredentials: true, 
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+  withCredentials: true,
 });
 
-API.defaults.headers.common["Bypass-Tunnel-Reminder"] = "true";
+
+API.defaults.headers.common["bypass-tunnel-reminder"] = "true";
 API.defaults.headers.post["Content-Type"] = "application/json";
 
 
