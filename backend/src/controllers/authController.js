@@ -4,23 +4,16 @@ const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 const dns = require("dns");
 
-dns.lookup("smtp.gmail.com", { all: true }, console.log);
+dns.setDefaultResultOrder("ipv4first");
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 587,
-  secure: false, // STARTTLS
-
+  secure: false,
   auth: {
     user: process.env.GMAIL_USER,
     pass: process.env.GMAIL_APP_PASSWORD,
   },
-
-  tls: {
-    servername: "smtp.gmail.com",
-  },
-
-  connectionTimeout: 15000,
 });
 
 const requestOtp = async (req, res) => {
