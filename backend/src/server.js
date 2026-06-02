@@ -19,7 +19,6 @@ app.use(
         "http://127.0.0.1:5173",
         process.env.FRONTEND_URL,
       ];
-      // Allow if no origin (browser direct visit) or if it matches our list
       if (
         !origin ||
         allowed.includes(origin) ||
