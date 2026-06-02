@@ -1,14 +1,15 @@
 import axios from "axios";
 
+import axios from "axios";
+
 const API = axios.create({
-  baseURL:
-    import.meta.env.VITE_API_BASE_URL ||
-    "https://pixel-backend-api.onrender.com/api/v1",
-  withCredentials: true,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  baseURL: import.meta.env.VITE_API_BASE_URL, 
+  withCredentials: true, 
 });
+
+API.defaults.headers.common["Bypass-Tunnel-Reminder"] = "true";
+API.defaults.headers.post["Content-Type"] = "application/json";
+
 
 API.interceptors.request.use(
   (config) => {
