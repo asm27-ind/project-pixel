@@ -3,22 +3,22 @@ const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 
-// Initialize Nodemailer SMTP Engine with Gmail
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 587,
-  secure: false,
+  secure: false, 
   auth: {
     user: process.env.GMAIL_USER,
     pass: process.env.GMAIL_APP_PASSWORD,
   },
+
+  dnsResolution: "ipv4first", 
+  
   tls: {
     rejectUnauthorized: false,
-    ciphers: "SSLv3", // ← add this
+    servername: "smtp.gmail.com" 
   },
   connectionTimeout: 10000,
-  greetingTimeout: 10000, // ← add this
-  socketTimeout: 10000, // ← add this
 });
 
 const requestOtp = async (req, res) => {
