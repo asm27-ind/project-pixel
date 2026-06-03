@@ -77,6 +77,10 @@ const executeDipAlgorithm = async (req, res) => {
       process.env.CLOUDINARY_API_SECRET,
     ]);
 
+    py.stdin.on("error", (e) => {
+      console.error("[Node.js Process Guard] Python stdin write error:", e.message);
+    });
+
     py.stdin.write(
       JSON.stringify({ imageB64, algorithm, projectId: String(project._id) }),
     );

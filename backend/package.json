@@ -5,7 +5,8 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "nodemon src/server.js"
+    "dev": "nodemon src/server.js",
+    "postinstall": "pip install -r requirements.txt || pip3 install -r requirements.txt || python3 -m pip install -r requirements.txt || python -m pip install -r requirements.txt"
   },
   "keywords": [],
   "author": "",

@@ -45,7 +45,7 @@ const uploadOriginalImage = async (req, res) => {
         },
         createdAt: Date.now(),
       },
-      { new: true, upsert: true },
+      { returnDocument: 'after', upsert: true },
     );
 
     return res.status(201).json({ success: true, project });
