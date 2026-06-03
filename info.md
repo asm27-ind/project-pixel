@@ -1,6 +1,6 @@
 # Backend Architecture
 
-The project structure (no architectural changes):
+The project structure :
 
 ```text
 src/
