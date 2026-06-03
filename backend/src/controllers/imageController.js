@@ -1,42 +1,32 @@
 const cloudinary = require("../config/cloudinary");
 const ImageProject = require("../models/ImageProject");
 
-
 const uploadOriginalImage = async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "No file buffer received. Attach an image with field name 'image'.",
-      });
-    }
+    if (!req.file)
+      return res
+        .status(400)
+        .json({ success: false, message: "No file received." });
 
-    const cleanFileName = req.file.originalname
-      .replace(/\.[^/.]+$/, "") // strip extension
-      .replace(/[^a-zA-Z0-9]/g, "_"); // sanitise special characters
+    const cleanName = req.file.originalname
+      .replace(/\.[^/.]+$/, "")
+      .replace(/[^a-zA-Z0-9]/g, "_");
+    const publicId = `user_${req.user._id}_${cleanName}`;
 
-    const customStorageId = `user_${req.user._id}_${cleanFileName}`;
-
-    // Stream the in-memory buffer directly to Cloudinary
     const result = await new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
         {
           folder: "project-pixel/original",
           resource_type: "auto",
-          public_id: customStorageId,
+          public_id: publicId,
           overwrite: true,
           invalidate: true,
         },
-        (err, data) => {
-          if (err) reject(err);
-          else resolve(data);
-        },
+        (err, data) => (err ? reject(err) : resolve(data)),
       );
       stream.end(req.file.buffer);
     });
 
-    // Upsert the project document — one project per user+filename combination
     const project = await ImageProject.findOneAndUpdate(
       { user: req.user._id, originalName: req.file.originalname },
       {
@@ -45,7 +35,6 @@ const uploadOriginalImage = async (req, res) => {
         originalUrl: result.secure_url,
         processedUrl: null,
         techniqueApplied: "NONE",
-        category: null,
         metadata: {
           width: result.width,
           height: result.height,
@@ -59,18 +48,15 @@ const uploadOriginalImage = async (req, res) => {
       { new: true, upsert: true },
     );
 
-    return res.status(201).json({
-      success: true,
-      message: "Image uploaded successfully.",
-      project,
-    });
+    return res.status(201).json({ success: true, project });
   } catch (error) {
-    console.error("[uploadOriginalImage]:", error.message);
-    return res.status(500).json({
-      success: false,
-      message: "Image upload to Cloudinary failed.",
-      error: error.message,
-    });
+    return res
+      .status(500)
+      .json({
+        success: false,
+        message: "Upload failed.",
+        error: error.message,
+      });
   }
 };
 

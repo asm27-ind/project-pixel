@@ -1,15 +1,15 @@
-// backend/src/controllers/processController.js
-
 const { spawn } = require("child_process");
 const path = require("path");
 const axios = require("axios");
+const cloudinary = require("../config/cloudinary");
 const ImageProject = require("../models/ImageProject");
 
-const ALGORITHM_CATEGORY = {
+const CATEGORY = {
   CONTRAST_STRETCHING: "ENHANCEMENT",
   HISTOGRAM_EQUALIZATION: "ENHANCEMENT",
   CLAHE: "ENHANCEMENT",
   GAMMA_CORRECTION: "ENHANCEMENT",
+  HIGH_BOOST_LAPLACIAN: "ENHANCEMENT",
   MEAN_FILTER: "RESTORATION",
   MEDIAN_FILTER: "RESTORATION",
   WIENER_FILTER: "RESTORATION",
@@ -17,163 +17,154 @@ const ALGORITHM_CATEGORY = {
   HUFFMAN_CODING: "ENCODING",
   ARITHMETIC_CODING: "ENCODING",
   LZW_COMPRESSION: "ENCODING",
+  OTSU_THRESHOLDING: "SEGMENTATION",
+  KMEANS_SEGMENTATION: "SEGMENTATION",
 };
 
 const executeDipAlgorithm = async (req, res) => {
   try {
     const { projectId, algorithm } = req.body;
 
-    // ── Validate inputs ─────────────────────────────────────────────────────
-    if (!projectId || !algorithm) {
-      return res.status(400).json({
-        success: false,
-        message: "Missing required fields: projectId and algorithm.",
-      });
-    }
+    if (!projectId || !algorithm)
+      return res
+        .status(400)
+        .json({ success: false, message: "Missing projectId or algorithm." });
 
-    if (!ALGORITHM_CATEGORY[algorithm]) {
-      return res.status(400).json({
-        success: false,
-        message: `Unknown algorithm "${algorithm}". Valid: ${Object.keys(ALGORITHM_CATEGORY).join(", ")}`,
-      });
-    }
+    if (!CATEGORY[algorithm])
+      return res
+        .status(400)
+        .json({ success: false, message: `Unknown algorithm: ${algorithm}` });
 
-    // ── Load project ────────────────────────────────────────────────────────
     const project = await ImageProject.findById(projectId);
-    if (!project) {
-      return res.status(404).json({
-        success: false,
-        message: "Image project not found. Upload an image first.",
-      });
+    if (!project)
+      return res
+        .status(404)
+        .json({ success: false, message: "Project not found." });
+
+    // Force Cloudinary to dynamically convert to PNG if it's stored in a format (like AVIF or WebP)
+    // that OpenCV's basic build cannot natively decode.
+    let imageUrl = project.originalUrl;
+    const urlParts = imageUrl.split(".");
+    if (urlParts.length > 1) {
+      const ext = urlParts[urlParts.length - 1].toLowerCase().split("?")[0];
+      if (ext !== "png" && ext !== "jpg" && ext !== "jpeg") {
+        urlParts[urlParts.length - 1] = "png";
+        imageUrl = urlParts.join(".");
+      }
     }
 
-    if (!project.originalUrl) {
-      return res.status(400).json({
-        success: false,
-        message: "Project has no source image. Re-upload the image.",
-      });
-    }
+    // Download image in Node (has all auth context) → pass as base64 to Python
+    const response = await axios.get(imageUrl, {
+      responseType: "arraybuffer",
+      timeout: 20000,
+    });
+    const imageB64 = Buffer.from(response.data).toString("base64");
 
-    // ── Download image from Cloudinary → convert to base64 ─────────────────
-    // Passing the buffer directly to Python via stdin avoids any networking
-    // issues inside the Python process (auth headers, proxy, etc.)
-    let imageB64;
-    try {
-      const response = await axios.get(project.originalUrl, {
-        responseType: "arraybuffer",
-        timeout: 20000,
-      });
-      imageB64 = Buffer.from(response.data).toString("base64");
-    } catch (fetchErr) {
-      return res.status(502).json({
-        success: false,
-        message: "Failed to download source image from Cloudinary.",
-        detail: fetchErr.message,
-      });
-    }
-
-    // ── Spawn Python engine ─────────────────────────────────────────────────
     const scriptPath = path.join(__dirname, "../config/process_engine.py");
+    const pythonCmd = process.platform === "win32" ? "python" : "python3";
 
-    const pythonProcess = spawn("python3", [
+    let responded = false;
+    const sendResponse = (statusCode, data) => {
+      if (responded) return;
+      responded = true;
+      res.status(statusCode).json(data);
+    };
+
+    const py = spawn(pythonCmd, [
       scriptPath,
       process.env.CLOUDINARY_CLOUD_NAME,
       process.env.CLOUDINARY_API_KEY,
       process.env.CLOUDINARY_API_SECRET,
     ]);
 
-    // Send image as base64 inside JSON — Python decodes it without any HTTP call
-    const payload = JSON.stringify({
-      imageB64,
-      algorithm,
-      projectId: String(project._id),
+    py.stdin.write(
+      JSON.stringify({ imageB64, algorithm, projectId: String(project._id) }),
+    );
+    py.stdin.end();
+
+    let out = "",
+      err = "";
+    py.stdout.on("data", (d) => {
+      out += d.toString();
+    });
+    py.stderr.on("data", (d) => {
+      err += d.toString();
     });
 
-    pythonProcess.stdin.write(payload);
-    pythonProcess.stdin.end();
-
-    let stdoutBuffer = "";
-    let stderrBuffer = "";
-
-    pythonProcess.stdout.on("data", (chunk) => {
-      stdoutBuffer += chunk.toString();
-    });
-    pythonProcess.stderr.on("data", (chunk) => {
-      stderrBuffer += chunk.toString();
-    });
-
-    // ── Handle python not found ─────────────────────────────────────────────
-    pythonProcess.on("error", (spawnErr) => {
-      console.error("[Spawn Error]:", spawnErr.message);
-      return res.status(500).json({
+    py.on("error", (e) => {
+      sendResponse(500, {
         success: false,
-        message:
-          "Could not start Python. Ensure python3 is installed and in PATH.",
-        detail: spawnErr.message,
+        message: `${pythonCmd} not found in PATH.`,
+        detail: e.message,
       });
     });
 
-    // ── Handle process exit ─────────────────────────────────────────────────
-    pythonProcess.on("close", async (exitCode) => {
-      if (stderrBuffer.trim()) {
-        // Log warnings (e.g. cv2 deprecations) but don't fail on them
-        console.warn("[Python stderr]:", stderrBuffer.trim());
-      }
+    py.on("close", async (code) => {
+      if (responded) return;
+      if (err.trim()) console.warn("[Python stderr]:", err.trim());
 
-      if (exitCode !== 0) {
-        console.error(`[Python Engine] Exited ${exitCode}:`, stderrBuffer);
-        return res.status(500).json({
+      if (code !== 0) {
+        return sendResponse(500, {
           success: false,
-          message: "Python engine exited with an error.",
-          detail: stderrBuffer || "No stderr captured.",
+          message: "Python engine error.",
+          detail: err,
         });
       }
 
-      // ── Parse JSON result from Python stdout ──────────────────────────────
       let result;
       try {
-        result = JSON.parse(stdoutBuffer.trim());
+        result = JSON.parse(out.trim());
       } catch {
-        console.error("[Python Engine] Bad JSON output:", stdoutBuffer);
-        return res.status(500).json({
+        return sendResponse(500, {
           success: false,
-          message: "Python engine returned malformed output.",
-          raw: stdoutBuffer,
+          message: "Bad output from Python.",
+          raw: out,
         });
       }
 
-      if (!result.success) {
-        return res.status(500).json({
+      if (!result.success)
+        return sendResponse(500, { success: false, message: result.error });
+
+      const processedBuffer = Buffer.from(result.processedB64, "base64");
+      let cloudinaryResult;
+      try {
+        cloudinaryResult = await new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            {
+              folder: "project-pixel/processed",
+              public_id: `processed-${project._id}`,
+              resource_type: "image",
+              overwrite: true,
+              invalidate: true,
+            },
+            (err, data) => (err ? reject(err) : resolve(data))
+          );
+          stream.end(processedBuffer);
+        });
+      } catch (uploadErr) {
+        return sendResponse(500, {
           success: false,
-          message: result.error || "Python engine reported failure.",
+          message: "Failed to upload processed image to Cloudinary.",
+          detail: uploadErr.message,
         });
       }
 
-      // ── Save results to MongoDB ───────────────────────────────────────────
-      project.processedUrl = result.processedUrl;
+      project.processedUrl = cloudinaryResult.secure_url;
       project.techniqueApplied = algorithm;
-      project.category = ALGORITHM_CATEGORY[algorithm];
+      project.category = CATEGORY[algorithm];
       project.metadata.processingTimeMs = result.processingTimeMs ?? 0;
-
-      if (result.compressedSizeInBytes != null) {
+      if (result.compressedSizeInBytes != null)
         project.metadata.compressedSizeInBytes = result.compressedSizeInBytes;
-      }
 
       await project.save();
-
-      return res.status(200).json({
+      return sendResponse(200, {
         success: true,
-        message: `${algorithm} applied successfully.`,
+        message: `${algorithm} applied.`,
         project,
       });
     });
   } catch (error) {
-    console.error("[processController] Unexpected error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error.",
-      detail: error.message,
-    });
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 

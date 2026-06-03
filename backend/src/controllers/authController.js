@@ -65,7 +65,8 @@ const verifyOtp = async (req, res) => {
 
     let user = await User.findOne({ email });
     if (!user) {
-      user = await User.create({ email });
+      const derivedDisplayName = email.split("@")[0];
+      user = await User.create({ email, displayName: derivedDisplayName });
     }
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
