@@ -1,14 +1,16 @@
-import React from 'react';
-
 export default function Sidebar({ processing, project, activeAlgo, onExecute, onLogout }) {
     const suites = [
         {
             title: 'Image Enhancement',
-            algos: ['CONTRAST_STRETCHING', 'HISTOGRAM_EQUALIZATION', 'CLAHE', 'GAMMA_CORRECTION'],
+            algos: ['CONTRAST_STRETCHING', 'HISTOGRAM_EQUALIZATION', 'CLAHE', 'GAMMA_CORRECTION', 'HIGH_BOOST_LAPLACIAN'],
         },
         {
             title: 'Image Restoration',
             algos: ['MEAN_FILTER', 'MEDIAN_FILTER', 'INVERSE_FILTER', 'WIENER_FILTER'],
+        },
+        {
+            title: 'Image Segmentation',
+            algos: ['OTSU_THRESHOLDING', 'KMEANS_SEGMENTATION'],
         },
         {
             title: 'Encoding & Compression',

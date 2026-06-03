@@ -1,11 +1,12 @@
 import { useDipEngine } from '../hooks/useDipEngine';
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import Sidebar from '../components/Sidebar';
 import AnalyticsPanel from '../components/AnalyticsPanel';
 
 export default function Dashboard() {
     const { logoutSession } = useContext(AuthContext);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const {
         project,
         activeAlgo,
@@ -24,7 +25,7 @@ export default function Dashboard() {
     };
 
     return (
-        <div className="dashboard-root">
+        <div className={`dashboard-root ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
             <Sidebar
                 processing={processing}
                 project={project}
@@ -35,21 +36,31 @@ export default function Dashboard() {
 
             <main className="canvas-viewport">
                 {errorMsg && <div className="alert-danger">{errorMsg}</div>}
-                {statusMsg && <div className="alert-success">{statusMsg}</div>}
+                {statusMsg && <div className="alert-success">{statusMsg.replace(/Executing computational transformations for/g, 'Applying filter:').replace(/Processing complete. Workspace synchronized./g, 'Filters applied successfully!')}</div>}
 
                 {!project ? (
                     <label className="dropzone-container">
                         <input type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
                         <span style={{ fontSize: '36px', marginBottom: '12px' }}>📥</span>
-                        <p style={{ fontSize: '15px', fontWeight: '600' }}>Click to Ingest Graphic Matrix Asset</p>
-                        <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Supports image layouts up to 2MB</p>
+                        <p style={{ fontSize: '15px', fontWeight: '600' }}>Click to Upload Image File</p>
+                        <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Supports images up to 2MB</p>
                     </label>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', alignItems: 'center' }}>
-                            <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
-                                Active Document Matrix: <strong style={{ color: '#fff' }}>{project.originalName}</strong>
-                            </span>
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                <button 
+                                    onClick={() => setSidebarCollapsed(!sidebarCollapsed)} 
+                                    className="btn-secondary" 
+                                    style={{ marginRight: '12px', fontSize: '12px', backgroundColor: 'var(--brand-cyan, #0ea5e9)', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                >
+                                    <span>{sidebarCollapsed ? '➡️' : '⬅️'}</span>
+                                    <span>{sidebarCollapsed ? 'Show Tools' : 'Hide Tools'}</span>
+                                </button>
+                                <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
+                                    Selected Image: <strong style={{ color: '#fff' }}>{project.originalName}</strong>
+                                </span>
+                            </div>
                             <button onClick={clearWorkspace} className="btn-secondary" style={{ backgroundColor: '#dc2626' }}>
                                 Clear Workspace
                             </button>
@@ -58,13 +69,13 @@ export default function Dashboard() {
                         <div className="comparison-grid">
                             <div className="image-frame">
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                                    <span className="frame-label">Raw Input Matrix Layer</span>
+                                    <span className="frame-label">Original Image</span>
                                     <button
                                         onClick={() => downloadImage(project.originalUrl, `original-${project.originalName}`)}
                                         className="btn-secondary"
                                         style={{ padding: '4px 8px', fontSize: '11px', backgroundColor: 'var(--brand-cyan, #0ea5e9)' }}
                                     >
-                                        💾 Download Raw
+                                        💾 Download Original
                                     </button>
                                 </div>
                                 <img src={project.originalUrl} alt="Original" className="display-img" />
@@ -72,7 +83,7 @@ export default function Dashboard() {
 
                             <div className="image-frame">
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                                    <span className="frame-label">Python Computed Output Array</span>
+                                    <span className="frame-label">Processed Image</span>
                                     {project.processedUrl && (
                                         <button
                                             onClick={() => downloadImage(project.processedUrl, `${project.techniqueApplied.toLowerCase()}-${project.originalName}`)}
@@ -88,9 +99,9 @@ export default function Dashboard() {
                                 ) : (
                                     <div className="empty-processed-placeholder">
                                         {processing ? (
-                                            'Engine manipulating pixel vectors directly inside server heap RAM...'
+                                            'Processing image, please wait...'
                                         ) : (
-                                            'Select an image enhancement or compression technique on the left panel to execute.'
+                                            'Select a filter or tool on the left tools panel to execute.'
                                         )}
                                     </div>
                                 )}

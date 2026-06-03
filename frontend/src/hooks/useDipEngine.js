@@ -25,6 +25,7 @@ export function useDipEngine() {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(blobUrl);
     } catch (err) {
+      console.error("[downloadImage Error]:", err);
       setErrorMsg("Could not route file download stream from cloud CDN nodes.");
     }
   };

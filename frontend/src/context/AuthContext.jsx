@@ -1,19 +1,19 @@
-import { createContext, useState, useEffect } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useState } from 'react';
 
 export const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [token, setToken] = useState(localStorage.getItem('pixel_token'));
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
+    const [token, setToken] = useState(() => localStorage.getItem('pixel_token'));
+    const [user, setUser] = useState(() => {
         const savedUser = localStorage.getItem('pixel_user');
-        if (token && savedUser) {
-            setUser(JSON.parse(savedUser));
+        try {
+            return savedUser ? JSON.parse(savedUser) : null;
+        } catch {
+            return null;
         }
-        setLoading(false);
-    }, [token]);
+    });
+    const [loading] = useState(false);
 
     const loginSession = (sessionToken, userData) => {
         localStorage.setItem('pixel_token', sessionToken);
