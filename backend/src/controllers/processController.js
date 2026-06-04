@@ -172,21 +172,4 @@ const executeDipAlgorithm = async (req, res) => {
   }
 };
 
-const debugPython = async (req, res) => {
-  try {
-    const { exec } = require("child_process");
-    exec("python3 -m pip install --break-system-packages numpy opencv-python-headless cloudinary", (err, stdout, stderr) => {
-      res.json({
-        success: !err,
-        stdout: stdout.trim(),
-        stderr: stderr.trim(),
-        errMessage: err ? err.message : null,
-        platform: process.platform
-      });
-    });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-};
-
-module.exports = { executeDipAlgorithm, debugPython };
+module.exports = { executeDipAlgorithm };
