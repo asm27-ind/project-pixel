@@ -172,4 +172,40 @@ const executeDipAlgorithm = async (req, res) => {
   }
 };
 
-module.exports = { executeDipAlgorithm };
+const debugPython = async (req, res) => {
+  try {
+    const pythonCmd = process.platform === "win32" ? "python" : "python3";
+    const py = spawn(pythonCmd, ["-c", "import sys, cv2, numpy, cloudinary; print('Python version:', sys.version); print('OpenCV version:', cv2.__version__); print('Numpy version:', numpy.__version__); print('Cloudinary version:', cloudinary.__version__)"]);
+
+    let stdout = "", stderr = "";
+    py.stdout.on("data", (d) => { stdout += d.toString(); });
+    py.stderr.on("data", (d) => { stderr += d.toString(); });
+
+    py.on("close", (code) => {
+      res.json({
+        success: code === 0,
+        code,
+        stdout: stdout.trim(),
+        stderr: stderr.trim(),
+        platform: process.platform,
+        env: {
+          CLOUDINARY_CLOUD_NAME: !!process.env.CLOUDINARY_CLOUD_NAME,
+          CLOUDINARY_API_KEY: !!process.env.CLOUDINARY_API_KEY,
+          CLOUDINARY_API_SECRET: !!process.env.CLOUDINARY_API_SECRET,
+        }
+      });
+    });
+
+    py.on("error", (err) => {
+      res.json({
+        success: false,
+        message: "Failed to spawn Python process",
+        error: err.message,
+      });
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+module.exports = { executeDipAlgorithm, debugPython };
